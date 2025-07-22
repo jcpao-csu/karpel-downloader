@@ -1,0 +1,14 @@
+# Virtual environments
+karpel-venv/
+
+# User information
+.env
+auth_state.json
+
+# Directories
+ARCHIVE/
+KARPEL DOWNLOADS/
+
+# MacOS native files
+.DS_Store
+__pycache__/

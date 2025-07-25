@@ -53,7 +53,7 @@ def login(page, page_type: str, context):
     print("🔐 Attempting login...")
 
     # Wait for JCPAO Seal to be visible (connected to Karpel server)
-    page.locator("#sealImage").wait_for(state='visible', timeout=10000) # Use CSS selectors (be sure to include # syntax for IDs)
+    page.locator("#sealImage").wait_for(state='visible', timeout=30000) # Use CSS selectors (be sure to include # syntax for IDs)
 
     # Attempt login
     page.locator("#txtuserId").fill(karpel_username) # Enter User ID
@@ -77,8 +77,22 @@ def download_karpel():
     """Main Python function that automates the downloading of Karpel custom reports"""
 
     # Make new directory
-    today_filename = datetime.today().date().strftime('%Y_%m_%d')
-    dir_path = f"KARPEL DOWNLOADS/{today_filename}"
+    today_filename = datetime.today().strftime('%Y_%m_%d_%H%M%S')
+
+    custom_name = input(f"📂 Creating downloads folder: {today_filename}. Hit the Enter key to continue, or provide a custom name for your folder:\n")
+    if custom_name:
+        dir_path = f"KARPEL DOWNLOADS/{custom_name}"
+    else:
+        dir_path = f"KARPEL DOWNLOADS/{today_filename}"
+
+    # Allow for multiple same-day downloads 
+    if Path(dir_path).is_dir() and any(f.is_file() for f in Path(dir_path).iterdir()): # .exists() also returns boolean if Path object exists
+        new_path = input(f"{dir_path} already exists. Hit the Enter key to continue with the default (YYYY_MM_DD_HHMMSS) title, or provide a name for your sub-folder:\n")
+        if new_path:
+            dir_path = Path(dir_path) / new_path
+        else:
+            dir_path = Path(dir_path) / today_filename
+
     Path(dir_path).mkdir(parents=True, exist_ok=True)
     print(f"✅ New downloads folder created: {dir_path}")
 
@@ -116,11 +130,12 @@ def download_karpel():
 
         # Initiate downloads log 
         downloads_log = {}
+        downloads_log['login_datetime'] = str(datetime.now()) # today_filename
 
         # Loop navigate to custom reports
         for report in reports_list:
             custom_url = karpel_url+report.replace(" ", "%20")
-            print(f"Navigating to {report}:\n{custom_url}")
+            print(f"\nNavigating to {report}:\n{custom_url}")
 
             page = context.new_page()
             page.goto(custom_url)
